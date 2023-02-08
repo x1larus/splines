@@ -53,6 +53,7 @@ int main()
     int curr_row = 0;
     
     // 1. Cплайны проходят через узловые точки
+    // S[i] = a[i] + b[i](x-x[i]) + c[i](x-x[i])^2 + d[i](x-x[i])^3
     for (int i = 0; i < n-1; i++)
     {
         // start dot in spline
@@ -66,6 +67,26 @@ int main()
         matrix[curr_row][i*4+1] = base_dots[i+1].x - base_dots[i].x; // b[i]
         matrix[curr_row][i*4+2] = pow(base_dots[i+1].x - base_dots[i].x, 2); // c[i]
         matrix[curr_row][i*4+3] = pow(base_dots[i+1].x - base_dots[i].x, 3); // d[i]
+        curr_row++;
+    }
+
+    // 2. Плавность в стыке сплайнов
+    // S'[i] = b[i] + 2c[i](x-x[i]) + 3d[i](x-x[i])^2
+    // S''[i] = 2c[i] + 6d[i](x-x[i])
+    for (int i = 0; i < n-2; i++)
+    {
+        // S'[i] = S'[i+1] <=> b[i] + 2c[i](x[i+1]-x[i]) + 3d[i](x[i+1]-x[i])^2 -
+        // - b[i+1] - 2c[i+1](x[i+1]-x[i+1]) - 3d[i+1](x[i+1]-x[i+1])^2
+        matrix[curr_row][i*4+1] = 1; // b[i]
+        matrix[curr_row][i*4+2] = 2*(base_dots[i+1].x - base_dots[i].x); // c[i]
+        matrix[curr_row][i*4+3] = 3*pow(base_dots[i+1].x - base_dots[i].x, 2); // d[i]
+        matrix[curr_row][(i+1)*4+1] = -1; // b[i+1]
+        curr_row++;
+
+        // S''[i] = S''[i+1] <=> 2c[i] + 6d[i](x[i+1]-x[i]) - 2c[i+1] - 6d[i+1](x[i+1]-x[i+1])
+        matrix[curr_row][i*4+2] = 2; // c[i]
+        matrix[curr_row][i*4+3] = 6*(base_dots[i+1].x - base_dots[i].x); // d[i]
+        matrix[curr_row][(i+1)*4+2] = -2; // c[i+1]
         curr_row++;
     }
 
