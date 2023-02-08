@@ -90,6 +90,16 @@ int main()
         curr_row++;
     }
 
+    // 3. Нулевая кривизна в крайних точках
+    // S''[0] = 0 в точке x[0] <=> 2c[0] + 6d[i](x[0]-x[0])
+    matrix[curr_row][2] = 2; // c[0]
+    curr_row++;
+
+    // S''[n-2] = 0 в точке x[n-1] <=> 2c[n-2] + 6d[n-2](x[n-1]-x[n-2])
+    matrix[curr_row][matrix_size - 4 + 2] = 2; // c[n-2]
+    matrix[curr_row][matrix_size - 4 + 3] = 6*(base_dots[n-1].x - base_dots[n-2].x); // d[n-2]
+    curr_row++;
+
     print_matrix(matrix, x_column, matrix_size);
     return 0;
 }
