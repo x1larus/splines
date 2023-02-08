@@ -29,27 +29,8 @@ void print_matrix(double **matrix, double *x_col, int size)
     }
 }
 
-int main()
+void get_expanded_matrix(double **matrix, double *x_column, struct coords *base_dots, const int n, const int matrix_size)
 {
-    int n;
-    scanf("%d", &n);
-    struct coords *base_dots = (struct coords*)malloc(n*sizeof(struct coords));
-    for (int i = 0; i < n; i++)
-    {
-        scanf("%lf %lf", &base_dots[i].x, &base_dots[i].y);
-    }
-
-    // solution
-    const int matrix_size = (n - 1) * 4;
-    double **matrix = (double **)malloc(matrix_size * sizeof(double *));
-    for (int i = 0; i < ((n - 1) * 4); i++)
-    {
-        matrix[i] = (double *)malloc(matrix_size * sizeof(double));
-        memset(matrix[i], 0, matrix_size * sizeof(double));
-    }
-    double *x_column = (double *)malloc(matrix_size * sizeof(double));
-    memset(x_column, 0, matrix_size * sizeof(double));
-    
     int curr_row = 0;
     
     // 1. Cплайны проходят через узловые точки
@@ -99,7 +80,32 @@ int main()
     matrix[curr_row][matrix_size - 4 + 2] = 2; // c[n-2]
     matrix[curr_row][matrix_size - 4 + 3] = 6*(base_dots[n-1].x - base_dots[n-2].x); // d[n-2]
     curr_row++;
+}
 
+
+int main()
+{
+    int n;
+    scanf("%d", &n);
+    struct coords *base_dots = (struct coords*)malloc(n*sizeof(struct coords));
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%lf %lf", &base_dots[i].x, &base_dots[i].y);
+    }
+
+    // init
+    const int matrix_size = (n - 1) * 4;
+    double **matrix = (double **)malloc(matrix_size * sizeof(double *));
+    for (int i = 0; i < matrix_size; i++)
+    {
+        matrix[i] = (double *)malloc(matrix_size * sizeof(double));
+        memset(matrix[i], 0, matrix_size * sizeof(double)); // sets array values to 0
+    }
+    double *x_column = (double *)malloc(matrix_size * sizeof(double));
+    memset(x_column, 0, matrix_size * sizeof(double)); // sets array values to 0
+
+    // solution
+    get_expanded_matrix(matrix, x_column, base_dots, n, matrix_size);
     print_matrix(matrix, x_column, matrix_size);
     return 0;
 }
