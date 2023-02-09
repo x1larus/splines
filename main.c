@@ -17,7 +17,7 @@ void print_coords(struct coords *dots, int n)
     }
 }
 
-void print_matrix(double **matrix, double *x_col, int size)
+void print_matrix(double **matrix, double *b_column, int size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -25,11 +25,11 @@ void print_matrix(double **matrix, double *x_col, int size)
         {
             printf("%5.2lf ", matrix[i][j]);
         }
-        printf("| %5.2lf\n", x_col[i]);
+        printf("| %5.2lf\n", b_column[i]);
     }
 }
 
-void get_expanded_matrix(double **matrix, double *x_column, struct coords *base_dots, const int n, const int matrix_size)
+void get_expanded_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size)
 {
     int curr_row = 0;
     
@@ -38,12 +38,12 @@ void get_expanded_matrix(double **matrix, double *x_column, struct coords *base_
     for (int i = 0; i < n-1; i++)
     {
         // start dot in spline
-        x_column[curr_row] = base_dots[i].y;
+        b_column[curr_row] = base_dots[i].y;
         matrix[curr_row][i*4] = 1; // a[i]
         curr_row++;
         
         // end dot in spline
-        x_column[curr_row] = base_dots[i+1].y;
+        b_column[curr_row] = base_dots[i+1].y;
         matrix[curr_row][i*4] = 1; // a[i]
         matrix[curr_row][i*4+1] = base_dots[i+1].x - base_dots[i].x; // b[i]
         matrix[curr_row][i*4+2] = pow(base_dots[i+1].x - base_dots[i].x, 2); // c[i]
@@ -101,11 +101,11 @@ int main()
         matrix[i] = (double *)malloc(matrix_size * sizeof(double));
         memset(matrix[i], 0, matrix_size * sizeof(double)); // sets array values to 0
     }
-    double *x_column = (double *)malloc(matrix_size * sizeof(double));
-    memset(x_column, 0, matrix_size * sizeof(double)); // sets array values to 0
+    double *b_column = (double *)malloc(matrix_size * sizeof(double));
+    memset(b_column, 0, matrix_size * sizeof(double)); // sets array values to 0
 
     // solution
-    get_expanded_matrix(matrix, x_column, base_dots, n, matrix_size);
-    print_matrix(matrix, x_column, matrix_size);
+    get_expanded_matrix(matrix, b_column, base_dots, n, matrix_size);
+    print_matrix(matrix, b_column, matrix_size);
     return 0;
 }
