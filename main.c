@@ -179,9 +179,8 @@ double *gauss_method(double **matrix, double *b_column, const int matrix_size)
         if (DEBUG)
         {
             char comment[50];
-            sprintf(comment, "Matrix after %d step", curr);
+            sprintf(comment, "Matrix after %d gauss step", curr);
             print_matrix(matrix, b_column, matrix_size, comment);
-            getchar();
         }
 
         curr++;
@@ -249,6 +248,8 @@ void print_matrix(double **matrix, double *b_column, int size, char comment[])
         printf("| %8.5lf\n", b_column[i]);
     }
     printf("[DEBUG]: ----------%s end----------\n\n", comment);
+    printf("[DEBUG]: Press enter to continue...\n");
+    getchar();
 }
 
 void print_spline_coefs(struct spline a, int number)
@@ -275,7 +276,7 @@ void print_spline(struct spline *spline1, int number, double step)
         
         printf("%5.2lf => %8.5lf\n", x, calculate_point(&spline1->equation_coefficients[current_piece*4], x, spline1->base_dots[current_piece].x));
     }
-    printf("----------Spline %d graph end----------\n", number);
+    printf("----------Spline %d graph end----------\n\n", number);
 }
 // ----------PRINT FUNCTIONS END------------
 
