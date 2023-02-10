@@ -19,53 +19,62 @@ struct spline
     double *equation_coefficients;
 };
 
-void swap(double *a, double *b)
-{
-    double temp = *a;
-    *a = *b;
-    *b = temp;
-}
+// calculate functions
+void fill_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size);
+double *gauss_method(double **matrix, double *b_column, const int matrix_size);
+void calcuate_spline_coefs(struct spline *spline1);
+double calculate_point(double *coefs, double x, double x0);
 
-void print_coords(struct coords *dots, int n)
+// print functions
+void print_coords(struct coords *dots, int n);
+void print_matrix(double **matrix, double *b_column, int size, char comment[]);
+void print_spline_coefs(struct spline a, int number);
+void print_spline(struct spline *spline1, int number, double step);
+
+// service functions
+void swap(double *a, double *b);
+
+int main()
 {
-    for (int i = 0; i < n; i++)
+    // Input
+    int splines_count;
+    printf("Enter the number of splines: ");
+    scanf("%d", &splines_count);
+
+    struct spline *splines = (struct spline *)malloc(splines_count * sizeof(struct spline));
+
+    for (int i = 0; i < splines_count; i++)
     {
-        printf("%lf %lf\n", dots[i].x, dots[i].y);
-    }
-}
+        printf("\tSpline %d:\nEnter the number of base dots: ", i);
+        scanf("%d", &splines[i].dots_count);
 
-void print_matrix(double **matrix, double *b_column, int size, char comment[])
-{
-    
-    if (strlen(comment) == 0)
-        comment = "Matrix";
+        splines[i].base_dots = (struct coords *)malloc(splines[i].dots_count * sizeof(struct coords));
 
-    printf("------------%s------------\n", comment);
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
+        printf("Enter base dots: x y\n");
+        for (int j = 0; j < splines[i].dots_count; j++)
         {
-            printf("%8.5lf ", matrix[i][j]);
+            scanf("%lf %lf", &splines[i].base_dots[j].x, &splines[i].base_dots[j].y);
         }
-        printf("| %8.5lf\n", b_column[i]);
     }
-    printf("----------%s end----------\n\n", comment);
-}
+    // input end
 
-void print_spline_coef(struct spline a)
-{
-    printf("------------Spline------------\n");
-    for (int i = 0; i < a.dots_count - 1; i++)
+    // solution
+    for (int i = 0; i < splines_count; i++)
     {
-        printf("Piece %d: ", i);
-        for (int j = 0; j < 4; j++)
-            printf("%8.5lf ", a.equation_coefficients[i*4+j]);
-        printf("\n");
+        calcuate_spline_coefs(&splines[i]);
     }
-    printf("----------Spline end----------\n\n");
+
+    // output    
+    for (int i = 0; i < splines_count; i++)
+    {
+        print_spline_coefs(splines[i], i);
+        print_spline(&splines[i], i, 0.1);
+    }
+    return 0;
 }
 
-void fill_expanded_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size)
+// ------------CALCULATE FUNCTIONS------------
+void fill_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size)
 {
     int curr_row = 0;
     
@@ -201,7 +210,7 @@ void calcuate_spline_coefs(struct spline *spline1)
     memset(b_column, 0, matrix_size * sizeof(double)); // sets array values to 0
 
     // solution
-    fill_expanded_matrix(matrix, b_column, spline1->base_dots, spline1->dots_count, matrix_size);
+    fill_matrix(matrix, b_column, spline1->base_dots, spline1->dots_count, matrix_size);
     if (DEBUG)
         print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
 
@@ -212,9 +221,52 @@ double calculate_point(double *coefs, double x, double x0)
 {
     return coefs[0] + coefs[1]*(x - x0) + coefs[2]*pow(x - x0, 2) + coefs[3]*pow(x - x0, 3);
 }
+// ----------CALCULATE FUNCTIONS END----------
 
-void print_spline(struct spline *spline1, double step)
+// ------------PRINT FUNCTIONS------------
+void print_coords(struct coords *dots, int n)
 {
+    for (int i = 0; i < n; i++)
+    {
+        printf("[DEBUG]: %lf %lf\n", dots[i].x, dots[i].y);
+    }
+}
+
+void print_matrix(double **matrix, double *b_column, int size, char comment[])
+{
+    
+    if (strlen(comment) == 0)
+        comment = "Matrix";
+
+    printf("[DEBUG]: ------------%s------------\n", comment);
+    for (int i = 0; i < size; i++)
+    {
+        printf("[DEBUG]: ");
+        for (int j = 0; j < size; j++)
+        {
+            printf("%8.5lf ", matrix[i][j]);
+        }
+        printf("| %8.5lf\n", b_column[i]);
+    }
+    printf("[DEBUG]: ----------%s end----------\n\n", comment);
+}
+
+void print_spline_coefs(struct spline a, int number)
+{
+    printf("------------Spline %d coefs------------\n", number);
+    for (int i = 0; i < a.dots_count - 1; i++)
+    {
+        printf("Piece %d: ", i);
+        for (int j = 0; j < 4; j++)
+            printf("%8.5lf ", a.equation_coefficients[i*4+j]);
+        printf("\n");
+    }
+    printf("----------Spline %d coefs end----------\n\n", number);
+}
+
+void print_spline(struct spline *spline1, int number, double step)
+{
+    printf("------------Spline %d graph------------\n", number);
     int current_piece = 0;
     for (double x = spline1->base_dots[0].x; x <= spline1->base_dots[spline1->dots_count-1].x; x += step)
     {
@@ -223,44 +275,15 @@ void print_spline(struct spline *spline1, double step)
         
         printf("%5.2lf => %8.5lf\n", x, calculate_point(&spline1->equation_coefficients[current_piece*4], x, spline1->base_dots[current_piece].x));
     }
+    printf("----------Spline %d graph end----------\n", number);
 }
+// ----------PRINT FUNCTIONS END------------
 
-int main()
+// ------------SERVICE FUNCTIONS------------
+void swap(double *a, double *b)
 {
-    // Input
-    int splines_count;
-    printf("Enter the number of splines: ");
-    scanf("%d", &splines_count);
-
-    struct spline *splines = (struct spline *)malloc(splines_count * sizeof(struct spline));
-
-    for (int i = 0; i < splines_count; i++)
-    {
-        printf("\tSpline %d:\nEnter the number of base dots: ", i);
-        scanf("%d", &splines[i].dots_count);
-
-        splines[i].base_dots = (struct coords *)malloc(splines[i].dots_count * sizeof(struct coords));
-
-        printf("Enter base dots: x y\n");
-        for (int j = 0; j < splines[i].dots_count; j++)
-        {
-            scanf("%lf %lf", &splines[i].base_dots[j].x, &splines[i].base_dots[j].y);
-        }
-    }
-    // input end
-
-    // solution
-    for (int i = 0; i < splines_count; i++)
-    {
-        calcuate_spline_coefs(&splines[i]);
-        if (DEBUG)
-            print_spline_coef(splines[i]);
-    }
-
-    // output    
-    for (int i = 0; i < splines_count; i++)
-    {
-        print_spline(&splines[i], 0.1);
-    }
-    return 0;
+    double temp = *a;
+    *a = *b;
+    *b = temp;
 }
+// ----------SERVICE FUNCTIONS END----------
