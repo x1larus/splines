@@ -3,6 +3,8 @@
 #include <string.h>
 #include <math.h>
 
+#define DEBUG 0
+
 struct coords
 {
     double x;
@@ -30,9 +32,13 @@ void print_coords(struct coords *dots, int n)
     }
 }
 
-void print_matrix(double **matrix, double *b_column, int size)
+void print_matrix(double **matrix, double *b_column, int size, char comment[])
 {
-    printf("------------Matrix------------\n");
+    
+    if (strlen(comment) == 0)
+        comment = "Matrix";
+
+    printf("------------%s------------\n", comment);
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
@@ -41,7 +47,7 @@ void print_matrix(double **matrix, double *b_column, int size)
         }
         printf("| %8.5lf\n", b_column[i]);
     }
-    printf("----------Matrix end----------\n\n");
+    printf("----------%s end----------\n\n", comment);
 }
 
 void print_spline_coef(struct spline a)
@@ -155,10 +161,20 @@ double *gauss_method(double **matrix, double *b_column, const int matrix_size)
                 continue; // Не вычитать уравнение само из себя
             for (int j = 0; j < matrix_size; j++)
                 matrix[i][j] -= matrix[curr][j];
+            b_column[i] -= b_column[curr];
         }
+
+        // DEBUG
+        if (DEBUG)
+        {
+            char comment[50];
+            sprintf(comment, "Matrix after %d step", curr);
+            print_matrix(matrix, b_column, matrix_size, comment);
+            getchar();
+        }
+
         curr++;
     }
-    print_matrix(matrix, b_column, matrix_size);
     // Обратная подстановка
     for (curr = matrix_size-1; curr >= 0; curr--) 
     {
@@ -184,7 +200,9 @@ struct spline get_spline(struct coords *base_dots, int n)
 
     // solution
     fill_expanded_matrix(matrix, b_column, base_dots, n, matrix_size);
-    print_matrix(matrix, b_column, matrix_size);
+    
+    if (DEBUG)
+        print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
 
     struct spline spline1;
     spline1.pieces_count = n - 1;
@@ -220,7 +238,10 @@ int main()
         scanf("%lf %lf", &base_dots[i].x, &base_dots[i].y);
     }
     struct spline spline1 = get_spline(base_dots, n);
-    print_spline_coef(spline1);
+    
+    if (DEBUG)
+        print_spline_coef(spline1);
+    
     print_spline(base_dots, spline1, n, 0.1);
     return 0;
 }
