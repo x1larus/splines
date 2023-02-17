@@ -20,9 +20,9 @@ struct spline
 };
 
 // calculate functions
+void calcuate_spline_coefs(struct spline *spline1);
 void fill_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size);
 double *gauss_method(double **matrix, double *b_column, const int matrix_size);
-void calcuate_spline_coefs(struct spline *spline1);
 double calculate_point(double *coefs, double x, double x0);
 
 // print functions
@@ -70,10 +70,43 @@ int main()
         print_spline_coefs(splines[i], i);
         print_spline(&splines[i], i, 0.1);
     }
+
+    for (int i = 0; i < splines_count; i++)
+    {
+        free(splines[i].base_dots);
+        free(splines[i].equation_coefficients);
+    }
+    free(splines);
     return 0;
 }
 
 // ------------CALCULATE FUNCTIONS------------
+void calcuate_spline_coefs(struct spline *spline1)
+{
+    const int matrix_size = (spline1->dots_count - 1) * 4;
+    double **matrix = (double **)malloc(matrix_size * sizeof(double *));
+    for (int i = 0; i < matrix_size; i++)
+    {
+        matrix[i] = (double *)malloc((matrix_size+1) * sizeof(double));
+        memset(matrix[i], 0, (matrix_size+1) * sizeof(double)); // sets array values to 0
+    }
+    double *b_column = (double *)malloc(matrix_size * sizeof(double));
+    memset(b_column, 0, matrix_size * sizeof(double)); // sets array values to 0
+
+    // solution
+    fill_matrix(matrix, b_column, spline1->base_dots, spline1->dots_count, matrix_size);
+    if (DEBUG)
+        print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
+
+    spline1->equation_coefficients = gauss_method(matrix, b_column, matrix_size);
+
+    // Delete
+    for (int i = 0; i < matrix_size; i++)
+        free(matrix[i]);
+    free(matrix);
+    free(b_column);
+}
+
 void fill_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size)
 {
     int curr_row = 0;
@@ -194,26 +227,6 @@ double *gauss_method(double **matrix, double *b_column, const int matrix_size)
     }
 
     return x_column;
-}
-
-void calcuate_spline_coefs(struct spline *spline1)
-{
-    const int matrix_size = (spline1->dots_count - 1) * 4;
-    double **matrix = (double **)malloc(matrix_size * sizeof(double *));
-    for (int i = 0; i < matrix_size; i++)
-    {
-        matrix[i] = (double *)malloc((matrix_size+1) * sizeof(double));
-        memset(matrix[i], 0, (matrix_size+1) * sizeof(double)); // sets array values to 0
-    }
-    double *b_column = (double *)malloc(matrix_size * sizeof(double));
-    memset(b_column, 0, matrix_size * sizeof(double)); // sets array values to 0
-
-    // solution
-    fill_matrix(matrix, b_column, spline1->base_dots, spline1->dots_count, matrix_size);
-    if (DEBUG)
-        print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
-
-    spline1->equation_coefficients = gauss_method(matrix, b_column, matrix_size);
 }
 
 double calculate_point(double *coefs, double x, double x0)

@@ -8,11 +8,12 @@
 			"args": [
 				"-fdiagnostics-color=always",
 				"-g",
-				"main.c",
+				"${fileDirname}/main.c",
 				"-o",
 				"${fileDirname}/a.out",
 				"-lm",
-				"-std=c11"
+				"-std=c11",
+				"-Wall"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
