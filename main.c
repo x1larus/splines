@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 struct coords
 {
@@ -50,11 +50,12 @@ int main()
 
         splines[i].base_dots = (struct coords *)malloc(splines[i].dots_count * sizeof(struct coords));
 
-        printf("Enter base dots: x y\n");
         for (int j = 0; j < splines[i].dots_count; j++)
         {
+            printf("Enter dot %d (x y): ", j);
             scanf("%lf %lf", &splines[i].base_dots[j].x, &splines[i].base_dots[j].y);
         }
+        printf("\n");
     }
     // input end
 
