@@ -3,7 +3,10 @@
 #include <string.h>
 #include <math.h>
 
-#define DEBUG 0
+#define M_PI (3.141592653589793)
+#define M_2PI (2.*M_PI)
+
+#define DEBUG 1
 
 struct coords
 {
@@ -16,7 +19,7 @@ struct spline
     int dots_count;
     struct coords *base_dots;
     // int pieces_count;
-    double *equation_coefficients;
+    double *coefs;
 };
 
 // calculate functions
@@ -24,6 +27,8 @@ void calcuate_spline_coefs(struct spline *spline1);
 void fill_matrix(double **matrix, double *b_column, struct coords *base_dots, const int n, const int matrix_size);
 double *gauss_method(double **matrix, double *b_column, const int matrix_size);
 double calculate_point(double *coefs, double x, double x0);
+int get_intersection_points(struct spline s1, struct spline s2);
+int cardano_method(double *x, double a, double b, double c);
 
 // print functions
 void print_coords(struct coords *dots, int n);
@@ -33,6 +38,8 @@ void print_spline(struct spline *spline1, int number, double step);
 
 // service functions
 void swap(double *a, double *b);
+double max(double a, double b);
+double min(double a, double b);
 
 int main()
 {
@@ -49,7 +56,8 @@ int main()
         scanf("%d", &splines[i].dots_count);
 
         splines[i].base_dots = (struct coords *)malloc(splines[i].dots_count * sizeof(struct coords));
-
+        
+        printf("Please enter dots in ascending order!\n");
         for (int j = 0; j < splines[i].dots_count; j++)
         {
             printf("Enter dot %d (x y): ", j);
@@ -75,7 +83,7 @@ int main()
     for (int i = 0; i < splines_count; i++)
     {
         free(splines[i].base_dots);
-        free(splines[i].equation_coefficients);
+        free(splines[i].coefs);
     }
     free(splines);
     return 0;
@@ -99,7 +107,7 @@ void calcuate_spline_coefs(struct spline *spline1)
     if (DEBUG)
         print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
 
-    spline1->equation_coefficients = gauss_method(matrix, b_column, matrix_size);
+    spline1->coefs = gauss_method(matrix, b_column, matrix_size);
 
     // Delete
     for (int i = 0; i < matrix_size; i++)
@@ -234,6 +242,80 @@ double calculate_point(double *coefs, double x, double x0)
 {
     return coefs[0] + coefs[1]*(x - x0) + coefs[2]*pow(x - x0, 2) + coefs[3]*pow(x - x0, 3);
 }
+
+int get_intersection_points(struct spline s1, struct spline s2)
+{
+    for (int i = 0; i < s1.dots_count-1; i++)
+    {
+        for (int j = 0; j < s2.dots_count-1; j++)
+        {
+            double left_border = max(s1.base_dots[i].x, s2.base_dots[j].x);
+            double right_border = min(s1.base_dots[i+1].x, s2.base_dots[j+1].x);
+            if (left_border <= right_border)
+            {
+                // Общий вид уравнения под метод кардано: x^3 + ax^2 + bx + c = 0
+                double divider = s1.coefs[i*4+3];
+                divider -= s2.coefs[j*4+3]; // для приведения уравнения
+
+                double a = (s1.coefs[i*4+2] - 3*s1.coefs[i*4+3]*s1.base_dots[i].x); 
+                a -= s2.coefs[j*4+2] - 3*s2.coefs[j*4+3]*s2.base_dots[j].x;
+                a /= divider;
+                
+                double b = s1.coefs[i*4+1] - 2*s1.coefs[i*4+2]*s1.base_dots[i].x + 3*s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 2);
+                b -= s2.coefs[j*4+1] - 2*s2.coefs[j*4+2]*s2.base_dots[j].x + 3*s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 2);
+                b /= divider;
+
+                double c = s1.coefs[i*4] - s1.coefs[i*4+1]*s1.base_dots[i].x + s1.coefs[i*4+2]*pow(s1.base_dots[i].x, 2) + s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 3);
+                c -= s2.coefs[j*4] - s2.coefs[j*4+1]*s2.base_dots[j].x + s2.coefs[j*4+2]*pow(s2.base_dots[j].x, 2) + s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 3);
+                c /= divider;
+
+                double *x = (double *)malloc(3*sizeof(double));
+                int cross_count = cardano_method(x, a, b, c);
+                
+            }
+        }
+    }
+}
+
+int cardano_method(double *x, double a, double b, double c)
+{
+    // http://algolist.ru/maths/findroot/cubic.php
+    double q, r, r2, q3;
+    q = (a * a - 3. * b) / 9.;
+    r = (a * (2. * a * a - 9. * b) + 27. * c) / 54.;
+    r2 = r * r;
+    q3 = q * q * q;
+    if (r2 < q3)
+    {
+        double t = acos(r / sqrt(q3));
+        a /= 3.;
+        q = -2. * sqrt(q);
+        x[0] = q * cos(t / 3.) - a;
+        x[1] = q * cos((t + M_2PI) / 3.) - a;
+        x[2] = q * cos((t - M_2PI) / 3.) - a;
+        return (3);
+    }
+    else
+    {
+        double aa, bb;
+        if (r <= 0.)
+            r = -r;
+        aa = -pow(r + sqrt(r2 - q3), 1. / 3.);
+        if (aa != 0.)
+            bb = q / aa;
+        else
+            bb = 0.;
+        a /= 3.;
+        q = aa + bb;
+        r = aa - bb;
+        x[0] = q - a;
+        x[1] = (-0.5) * q - a;
+        x[2] = (sqrt(3.) * 0.5) * fabs(r);
+        if (x[2] == 0.)
+            return (2);
+        return (1);
+    }
+}
 // ----------CALCULATE FUNCTIONS END----------
 
 // ------------PRINT FUNCTIONS------------
@@ -273,7 +355,7 @@ void print_spline_coefs(struct spline a, int number)
     {
         printf("Piece %d: ", i);
         for (int j = 0; j < 4; j++)
-            printf("%8.5lf ", a.equation_coefficients[i*4+j]);
+            printf("%8.5lf ", a.coefs[i*4+j]);
         printf("\n");
     }
     printf("----------Spline %d coefs end----------\n\n", number);
@@ -288,7 +370,7 @@ void print_spline(struct spline *spline1, int number, double step)
         if (x >= spline1->base_dots[current_piece+1].x)
             current_piece++;
         
-        printf("%5.2lf => %8.5lf\n", x, calculate_point(&spline1->equation_coefficients[current_piece*4], x, spline1->base_dots[current_piece].x));
+        printf("%5.2lf => %8.5lf\n", x, calculate_point(&spline1->coefs[current_piece*4], x, spline1->base_dots[current_piece].x));
     }
     printf("----------Spline %d graph end----------\n\n", number);
 }
@@ -300,5 +382,15 @@ void swap(double *a, double *b)
     double temp = *a;
     *a = *b;
     *b = temp;
+}
+
+double max(double a, double b)
+{
+    return a > b ? a : b;
+}
+
+double min(double a, double b)
+{
+    return a > b ? b : a;
 }
 // ----------SERVICE FUNCTIONS END----------
