@@ -270,13 +270,6 @@ double calculate_point(double *coefs, double x, double x0)
     return coefs[0] + coefs[1]*(x - x0) + coefs[2]*pow(x - x0, 2) + coefs[3]*pow(x - x0, 3);
 }
 
-// ----------CALCULATE FUNCTIONS END----------
-
-
-// ----------INTERSECTION FURCTIONS----------
-
-
-
 int cardano_method(double *x, double a, double b, double c)
 {
     // http://algolist.ru/maths/findroot/cubic.php
@@ -317,7 +310,7 @@ int cardano_method(double *x, double a, double b, double c)
     }
 }
 
-// --------INTERSECTION FURCTIONS END--------
+// ----------CALCULATE FUNCTIONS END----------
 
 
 // ------------SERVICE FUNCTIONS------------
