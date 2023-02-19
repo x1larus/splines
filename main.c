@@ -61,6 +61,8 @@ int main()
         }
     }
 
+    print_real_graph(splines[0]);
+
     // freeing memory
     for (int i = 0; i < splines_count; i++)
     {
