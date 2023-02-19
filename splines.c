@@ -423,6 +423,7 @@ int solve_cubic(double *x, double a, double b, double c)
 
 int solve_quadratic(double *x, double a, double b, double c)
 {
+    // http://algolist.ru/maths/findroot/quadrantic.php
     double d;
     /* the main case */
     d = b * b - 4. * a * c; /* the discriminant */
