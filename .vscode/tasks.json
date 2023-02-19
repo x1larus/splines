@@ -9,6 +9,7 @@
 				"-fdiagnostics-color=always",
 				"-g",
 				"${fileDirname}/main.c",
+				"${fileDirname}/splines.c",
 				"-o",
 				"${fileDirname}/a.out",
 				"-lm",
