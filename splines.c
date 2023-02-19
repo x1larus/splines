@@ -8,7 +8,7 @@
 #define M_PI (3.141592653589793)
 #define M_2PI (2.*M_PI)
 
-#define DEBUG 1
+#define DEBUG 0
 
 
 //===========================================FUNCTIONS DECLARATIONS===========================================
@@ -18,15 +18,19 @@
 // Filling the matrix of the system of linear algebraic equations
 void fill_matrix(double **matrix, double *b_column, Coords *base_dots, const int n, const int matrix_size);
 
-// Solve the system of linear algebraic equations
-double *gauss_method(double **matrix, double *b_column, const int matrix_size);
+// Solve the system of linear algebraic equations (Gauss)
+double *solve_matrix(double **matrix, double *b_column, const int matrix_size);
 
 // Calculate f(x)
 double calculate_point(double *coefs, double x, double x0);
 
-// Solve x^3 + ax^2 + bx + c = 0
+// Solve x^3 + ax^2 + bx + c = 0 (Cardano)
 // Returns the number of roots
-int cardano_method(double *x, double a, double b, double c);
+int solve_cubic(double *x, double a, double b, double c);
+
+// Solve ax^2 + bx + c = 0
+// Returns the number of roots
+int solve_quadratic(double *x, double a, double b, double c);
 
 // ----------CALCULATE FUNCTIONS END----------
 
@@ -68,7 +72,7 @@ void calcuate_spline(Spline *spline1)
     if (DEBUG)
         print_matrix(matrix, b_column, matrix_size, "Calculated matrix");
 
-    spline1->coefs = gauss_method(matrix, b_column, matrix_size);
+    spline1->coefs = solve_matrix(matrix, b_column, matrix_size);
 
     // Delete
     for (int i = 0; i < matrix_size; i++)
@@ -99,13 +103,17 @@ void print_graph(Spline *spline1, int number, double step)
         if (x >= spline1->base_dots[current_piece+1].x)
             current_piece++;
         
-        printf("%5.2lf => %8.5lf\n", x, calculate_point(&spline1->coefs[current_piece*4], x, spline1->base_dots[current_piece].x));
+        printf("x = %5.2lf; y = %8.5lf\n", x, calculate_point(&spline1->coefs[current_piece*4], x, spline1->base_dots[current_piece].x));
     }
     printf("----------Spline %d graph end----------\n\n", number);
 }
 
-int get_intersection_points(Spline s1, Spline s2)
+int get_intersection_points(Coords *x, Spline s1, Spline s2)
 {
+    int curr = 0;
+    double *roots = (double *)malloc(3*sizeof(double));
+    int roots_count;
+
     for (int i = 0; i < s1.dots_count-1; i++)
     {
         for (int j = 0; j < s2.dots_count-1; j++)
@@ -114,28 +122,63 @@ int get_intersection_points(Spline s1, Spline s2)
             double right_border = min(s1.base_dots[i+1].x, s2.base_dots[j+1].x);
             if (left_border <= right_border)
             {
-                // Общий вид уравнения под метод кардано: x^3 + ax^2 + bx + c = 0
-                double divider = s1.coefs[i*4+3];
-                divider -= s2.coefs[j*4+3]; // для приведения уравнения
+                // ax^3 + bx^2 + cx + d
+                double a = s1.coefs[i*4+3];
+                a -= s2.coefs[j*4+3];
 
-                double a = (s1.coefs[i*4+2] - 3*s1.coefs[i*4+3]*s1.base_dots[i].x); 
-                a -= s2.coefs[j*4+2] - 3*s2.coefs[j*4+3]*s2.base_dots[j].x;
-                a /= divider;
+                double b = (s1.coefs[i*4+2] - 3*s1.coefs[i*4+3]*s1.base_dots[i].x); 
+                b -= (s2.coefs[j*4+2] - 3*s2.coefs[j*4+3]*s2.base_dots[j].x);
                 
-                double b = s1.coefs[i*4+1] - 2*s1.coefs[i*4+2]*s1.base_dots[i].x + 3*s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 2);
-                b -= s2.coefs[j*4+1] - 2*s2.coefs[j*4+2]*s2.base_dots[j].x + 3*s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 2);
-                b /= divider;
+                double c = s1.coefs[i*4+1] - 2*s1.coefs[i*4+2]*s1.base_dots[i].x + 3*s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 2);
+                c -= (s2.coefs[j*4+1] - 2*s2.coefs[j*4+2]*s2.base_dots[j].x + 3*s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 2));
 
-                double c = s1.coefs[i*4] - s1.coefs[i*4+1]*s1.base_dots[i].x + s1.coefs[i*4+2]*pow(s1.base_dots[i].x, 2) + s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 3);
-                c -= s2.coefs[j*4] - s2.coefs[j*4+1]*s2.base_dots[j].x + s2.coefs[j*4+2]*pow(s2.base_dots[j].x, 2) + s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 3);
-                c /= divider;
+                double d = s1.coefs[i*4] - s1.coefs[i*4+1]*s1.base_dots[i].x + s1.coefs[i*4+2]*pow(s1.base_dots[i].x, 2) - s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 3);
+                d -= (s2.coefs[j*4] - s2.coefs[j*4+1]*s2.base_dots[j].x + s2.coefs[j*4+2]*pow(s2.base_dots[j].x, 2) - s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 3));
 
-                double *x = (double *)malloc(3*sizeof(double));
-                int cross_count = cardano_method(x, a, b, c);
-                
+                if (a != 0)
+                {
+                    // кубический случай
+                    // приводим уравнение для Кардано
+                    b /= a;
+                    c /= a;
+                    d /= a;
+                    roots_count = solve_cubic(roots, b, c, d);
+                }
+                else if (b != 0)
+                {
+                    // квадратичный случай
+                    roots_count = solve_quadratic(roots, b, c, d);
+                }
+                else if (c != 0)
+                {
+                    // линейный случай
+                    roots_count = 1;
+                    roots[0] = -d / c;
+                }
+                else
+                {
+                    roots_count = 0;
+                }
+
+                for (int k = 0; k < roots_count; k++)
+                {
+                    if (roots[k] >= left_border && roots[k] <= right_border)
+                    {
+                        // проверка совпадающих решений на концах областей определения функций
+                        if (curr > 0 && x[curr-1].x == roots[k])
+                            continue;
+                        
+                        x[curr].x = roots[k];
+                        x[curr++].y = calculate_point(&s1.coefs[i*4], roots[k], s1.base_dots[i].x);
+                    }
+                }
             }
         }
     }
+
+    free(roots);
+
+    return curr > 0 ? curr : 0;
 }
 
 // ----------GLOBAL FUNCTIONS END----------
@@ -196,7 +239,7 @@ void fill_matrix(double **matrix, double *b_column, Coords *base_dots, const int
     curr_row++;
 }
 
-double *gauss_method(double **matrix, double *b_column, const int matrix_size)
+double *solve_matrix(double **matrix, double *b_column, const int matrix_size)
 {
     // https://prog-cpp.ru/gauss/
     double *x_column = (double *)malloc(matrix_size * sizeof(double));
@@ -270,7 +313,7 @@ double calculate_point(double *coefs, double x, double x0)
     return coefs[0] + coefs[1]*(x - x0) + coefs[2]*pow(x - x0, 2) + coefs[3]*pow(x - x0, 3);
 }
 
-int cardano_method(double *x, double a, double b, double c)
+int solve_cubic(double *x, double a, double b, double c)
 {
     // http://algolist.ru/maths/findroot/cubic.php
     double q, r, r2, q3;
@@ -308,6 +351,31 @@ int cardano_method(double *x, double a, double b, double c)
             return (2);
         return (1);
     }
+}
+
+int solve_quadratic(double *x, double a, double b, double c)
+{
+    double d;
+    /* the main case */
+    d = b * b - 4. * a * c; /* the discriminant */
+    /* one distinct root */
+    if (d == 0.)
+    {
+        x[0] = x[1] = -b / (2. * a);
+        return (1);
+    }
+    if (d < 0.)
+    {
+        return (0);
+    }
+    /* 2 real roots: avoid subtraction of 2 close numbers */
+    if (b >= 0.)
+        d = (-0.5) * (b + sqrt(d));
+    else
+        d = (-0.5) * (b - sqrt(d));
+    x[0] = d / a;
+    x[1] = c / d;
+    return (2);
 }
 
 // ----------CALCULATE FUNCTIONS END----------

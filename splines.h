@@ -26,4 +26,4 @@ void print_graph(Spline *spline1, int number, double step);
 
 // Fill array of two splines intersection points 
 // Returns the number of intersections
-int get_intersection_points(Spline s1, Spline s2);
+int get_intersection_points(Coords *x, Spline s1, Spline s2);
