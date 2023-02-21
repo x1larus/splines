@@ -185,7 +185,7 @@ void print_real_graph(Spline s1)
 {
     // Грязь))
     int cols;
-    system("tput cols >> temp.txt"); // require ncurses library
+    system("tput cols >> temp.txt"); // required ncurses library
     FILE *f = fopen("temp.txt", "r");
     fscanf(f, "%d", &cols);
     fclose(f);
@@ -201,10 +201,14 @@ void print_real_graph(Spline s1)
     int curr = 0;
     double max_y, min_y;
     short flag_first = 1;
-    for (double x = s1.base_dots[0].x; x <= s1.base_dots[s1.dots_count-1].x; x += x_step)
+    for (double x = s1.base_dots[0].x; x < s1.base_dots[s1.dots_count-1].x; x += x_step)
     {
+        if (curr == cols)
+            break;
+        
         if (x >= s1.base_dots[current_piece+1].x)
             current_piece++;
+        
         graph[curr].x = x;
         graph[curr].y = calculate_point(&s1.coefs[current_piece*4], x, s1.base_dots[current_piece].x);
         
@@ -223,7 +227,7 @@ void print_real_graph(Spline s1)
         curr++;
     }
 
-    int rows = cols / 4;
+    int rows = cols / 4 - cols / 100 * 10;
     double y_step = (max_y - min_y) / rows;
     char screen_buffer[rows+1][cols+1];
     for (int i = 0; i < rows+1; i++)
