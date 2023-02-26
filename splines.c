@@ -81,15 +81,15 @@ void calcuate_spline(Spline *spline1)
     free(b_column);
 }
 
-void print_spline(Spline a, int number)
+void print_spline(Spline *a, int number)
 {
     printf("------------Spline %d coefs------------\n", number);
-    for (int i = 0; i < a.dots_count - 1; i++)
+    for (int i = 0; i < a->dots_count - 1; i++)
     {
         printf("Piece %d: ", i);
-        for (int j = 0; j < 4; j++)
-            printf("%8.5lf ", a.coefs[i*4+j]);
-        printf("\n");
+        printf("%.3lf + %.3lf*(x - %.3lf) + %.3lf*(x - %.3lf)^2 + %.3lf*(x - %.3lf)^3\n",
+                a->coefs[i*4], a->coefs[i*4+1], a->base_dots[i].x, a->coefs[i*4+2], a->base_dots[i].x,
+                a->coefs[i*4+3], a->base_dots[i].x);
     }
     printf("----------Spline %d coefs end----------\n\n", number);
 }
@@ -178,7 +178,7 @@ int get_intersection_points(Coords *x, Spline s1, Spline s2)
 
     free(roots);
 
-    return curr > 0 ? curr : 0;
+    return curr;
 }
 
 void print_real_graph(Spline s1)
@@ -248,7 +248,7 @@ void print_real_graph(Spline s1)
 
     for (int i = 0; i < cols; i++)
         printf("-");
-    printf("\n");
+    printf("\n\n");
 
     free(graph);
 }

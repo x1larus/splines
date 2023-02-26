@@ -11,7 +11,7 @@ typedef struct coords
 typedef struct spline
 {
     int dots_count;
-    struct coords *base_dots;
+    Coords *base_dots;
     double *coefs;
 } Spline;
 
@@ -19,9 +19,11 @@ typedef struct spline
 void calcuate_spline(Spline *spline1);
 
 // Prints equations coefficients
-void print_spline(Spline a, int number);
+// Param NUMBER uses only in comment
+void print_spline(Spline *a, int number);
 
 // Prints f(x) with a STEP difference
+// Param NUMBER uses only in comment
 void print_graph(Spline *spline1, int number, double step);
 
 // Fill array of two splines intersection points 

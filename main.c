@@ -35,12 +35,12 @@ int main()
     // printing   
     for (int i = 0; i < splines_count; i++)
     {
-        print_spline(splines[i], i);
-        print_graph(&splines[i], i, 0.1);
+        print_spline(&splines[i], i);
+        //print_graph(&splines[i], i, 0.1);
     }
 
     // get crossing points
-    for (int i = 0; i < splines_count; i++)
+    for (int i = 0; i < splines_count-1; i++)
     {
         for (int j = i+1; j < splines_count; j++)
         {
@@ -61,7 +61,12 @@ int main()
         }
     }
 
-    print_real_graph(splines[0]);
+    // Print graphs in console
+    for (int i = 0; i < splines_count; i++)
+    {
+        printf("\tSpline %d graph\n", i);
+        print_real_graph(splines[i]);
+    }
 
     // freeing memory
     for (int i = 0; i < splines_count; i++)
