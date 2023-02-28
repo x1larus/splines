@@ -36,7 +36,7 @@ int main()
     for (int i = 0; i < splines_count; i++)
     {
         print_spline(&splines[i], i);
-        //print_graph(&splines[i], i, 0.1);
+        // print_graph(&splines[i], i, 0.1);
     }
 
     // get crossing points
@@ -50,23 +50,34 @@ int main()
             Coords *x = (Coords *)malloc((splines[i].dots_count-1)*(splines[j].dots_count-1)*3*sizeof(Coords)); 
             int cross_count = get_intersection_points(x, splines[i], splines[j]);
             if (cross_count == 0)
-                printf("Splines do not intersect or equal\n");
-            
-            for (int k = 0; k < cross_count; k++)
             {
-                printf("x = %8.5lf; y = %8.5lf\n", x[k].x, x[k].y);
+                printf("Splines do not intersect or equal\n");
+                // Get min distance
+                double dist = get_min_distance(splines[i], splines[j]);
+                if (dist != -1)
+                    printf("Min distance between splines is %lf\n", dist);
+                else
+                    printf("Min distance can't be found :(\n");
+            }
+            else
+            {
+                for (int k = 0; k < cross_count; k++)
+                {
+                    printf("x = %8.5lf; y = %8.5lf\n", x[k].x, x[k].y);
+                }
             }
 
+            free(x);
             printf("----------Cross between spline %d and %d end----------\n\n", i, j);
         }
     }
 
     // Print graphs in console
-    for (int i = 0; i < splines_count; i++)
-    {
-        printf("\tSpline %d graph\n", i);
-        print_real_graph(splines[i]);
-    }
+    // for (int i = 0; i < splines_count; i++)
+    // {
+    //     printf("\tSpline %d graph\n", i);
+    //     print_real_graph(splines[i]);
+    // }
 
     // freeing memory
     for (int i = 0; i < splines_count; i++)

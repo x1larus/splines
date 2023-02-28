@@ -32,3 +32,6 @@ int get_intersection_points(Coords *x, Spline s1, Spline s2);
 
 // Print spline graph in console
 void print_real_graph(Spline s1);
+
+// Get min distance
+double get_min_distance(Spline s1, Spline s2);
