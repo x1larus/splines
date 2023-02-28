@@ -111,32 +111,32 @@ void print_graph(Spline *spline1, int number, double step)
     printf("----------Spline %d graph end----------\n\n", number);
 }
 
-int get_intersection_points(Coords *x, Spline s1, Spline s2)
+int get_intersection_points(Coords *x, Spline *s1, Spline *s2)
 {
     int curr = 0;
     double *roots = (double *)malloc(3*sizeof(double));
     int roots_count;
 
-    for (int i = 0; i < s1.dots_count-1; i++)
+    for (int i = 0; i < s1->dots_count-1; i++)
     {
-        for (int j = 0; j < s2.dots_count-1; j++)
+        for (int j = 0; j < s2->dots_count-1; j++)
         {
-            double left_border = max(s1.base_dots[i].x, s2.base_dots[j].x);
-            double right_border = min(s1.base_dots[i+1].x, s2.base_dots[j+1].x);
+            double left_border = max(s1->base_dots[i].x, s2->base_dots[j].x);
+            double right_border = min(s1->base_dots[i+1].x, s2->base_dots[j+1].x);
             if (left_border <= right_border)
             {
                 // ax^3 + bx^2 + cx + d
-                double a = s1.coefs[i*4+3];
-                a -= s2.coefs[j*4+3];
+                double a = s1->coefs[i*4+3];
+                a -= s2->coefs[j*4+3];
 
-                double b = (s1.coefs[i*4+2] - 3*s1.coefs[i*4+3]*s1.base_dots[i].x); 
-                b -= (s2.coefs[j*4+2] - 3*s2.coefs[j*4+3]*s2.base_dots[j].x);
+                double b = (s1->coefs[i*4+2] - 3*s1->coefs[i*4+3]*s1->base_dots[i].x); 
+                b -= (s2->coefs[j*4+2] - 3*s2->coefs[j*4+3]*s2->base_dots[j].x);
                 
-                double c = s1.coefs[i*4+1] - 2*s1.coefs[i*4+2]*s1.base_dots[i].x + 3*s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 2);
-                c -= (s2.coefs[j*4+1] - 2*s2.coefs[j*4+2]*s2.base_dots[j].x + 3*s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 2));
+                double c = s1->coefs[i*4+1] - 2*s1->coefs[i*4+2]*s1->base_dots[i].x + 3*s1->coefs[i*4+3]*pow(s1->base_dots[i].x, 2);
+                c -= (s2->coefs[j*4+1] - 2*s2->coefs[j*4+2]*s2->base_dots[j].x + 3*s2->coefs[j*4+3]*pow(s2->base_dots[j].x, 2));
 
-                double d = s1.coefs[i*4] - s1.coefs[i*4+1]*s1.base_dots[i].x + s1.coefs[i*4+2]*pow(s1.base_dots[i].x, 2) - s1.coefs[i*4+3]*pow(s1.base_dots[i].x, 3);
-                d -= (s2.coefs[j*4] - s2.coefs[j*4+1]*s2.base_dots[j].x + s2.coefs[j*4+2]*pow(s2.base_dots[j].x, 2) - s2.coefs[j*4+3]*pow(s2.base_dots[j].x, 3));
+                double d = s1->coefs[i*4] - s1->coefs[i*4+1]*s1->base_dots[i].x + s1->coefs[i*4+2]*pow(s1->base_dots[i].x, 2) - s1->coefs[i*4+3]*pow(s1->base_dots[i].x, 3);
+                d -= (s2->coefs[j*4] - s2->coefs[j*4+1]*s2->base_dots[j].x + s2->coefs[j*4+2]*pow(s2->base_dots[j].x, 2) - s2->coefs[j*4+3]*pow(s2->base_dots[j].x, 3));
 
                 if (a != 0)
                 {
@@ -172,7 +172,7 @@ int get_intersection_points(Coords *x, Spline s1, Spline s2)
                             continue;
                         
                         x[curr].x = roots[k];
-                        x[curr++].y = calculate_point(&s1.coefs[i*4], roots[k], s1.base_dots[i].x);
+                        x[curr++].y = calculate_point(&s1->coefs[i*4], roots[k], s1->base_dots[i].x);
                     }
                 }
             }
@@ -184,7 +184,7 @@ int get_intersection_points(Coords *x, Spline s1, Spline s2)
     return curr;
 }
 
-void print_real_graph(Spline s1)
+void print_real_graph(Spline *s1)
 {
     // Грязь))
     int cols;
@@ -198,22 +198,22 @@ void print_real_graph(Spline s1)
         printf("-");
     printf("\n");
 
-    double x_step = (s1.base_dots[s1.dots_count-1].x - s1.base_dots[0].x) / cols;
+    double x_step = (s1->base_dots[s1->dots_count-1].x - s1->base_dots[0].x) / cols;
     Coords *graph = (Coords *)malloc(cols*sizeof(Coords));
     int current_piece = 0;
     int curr = 0;
     double max_y, min_y;
     short flag_first = 1;
-    for (double x = s1.base_dots[0].x; x < s1.base_dots[s1.dots_count-1].x; x += x_step)
+    for (double x = s1->base_dots[0].x; x < s1->base_dots[s1->dots_count-1].x; x += x_step)
     {
         if (curr == cols)
             break;
         
-        if (x >= s1.base_dots[current_piece+1].x)
+        if (x >= s1->base_dots[current_piece+1].x)
             current_piece++;
         
         graph[curr].x = x;
-        graph[curr].y = calculate_point(&s1.coefs[current_piece*4], x, s1.base_dots[current_piece].x);
+        graph[curr].y = calculate_point(&s1->coefs[current_piece*4], x, s1->base_dots[current_piece].x);
         
         if (flag_first)
         {
@@ -256,7 +256,7 @@ void print_real_graph(Spline s1)
     free(graph);
 }
 
-double get_min_distance(Spline s1, Spline s2)
+double get_min_distance(Spline *s1, Spline *s2)
 {
     // f(x1, x2) = (x1 - x2)^2 + (f1(x1) - f2(x2))^2
     // f(x1, x2) -> min
@@ -271,36 +271,36 @@ double get_min_distance(Spline s1, Spline s2)
     double minimum;
     short flag = 1;
 
-    for (int i = 0; i < s1.dots_count - 1; i++)
+    for (int i = 0; i < s1->dots_count - 1; i++)
     {
-        for (int j = 0; j < s2.dots_count - 1; j++)
+        for (int j = 0; j < s2->dots_count - 1; j++)
         {
             // solution
-            x_prev[0] = s1.base_dots[i].x;
-            x_prev[1] = s2.base_dots[j].x;
+            x_prev[0] = s1->base_dots[i].x;
+            x_prev[1] = s2->base_dots[j].x;
             
             while (1)
             {
-                calculate_gradient(grad, &s1.coefs[i*4], &s2.coefs[j*4], x_prev, s1.base_dots[i].x, s2.base_dots[j].x);
+                calculate_gradient(grad, &s1->coefs[i*4], &s2->coefs[j*4], x_prev, s1->base_dots[i].x, s2->base_dots[j].x);
                 x[0] = x_prev[0] - lambda * grad[0];
                 x[1] = x_prev[1] - lambda * grad[1];
 
                 if ( (fabs(x[0] - x_prev[0]) < eps && fabs(x[1] - x_prev[1]) < eps) )
                     break;
 
-                if (x[0] < s1.base_dots[i].x || x[0] > s1.base_dots[i+1].x ||
-                    x[1] < s2.base_dots[j].x || x[1] > s2.base_dots[j+1].x)
+                if (x[0] < s1->base_dots[i].x || x[0] > s1->base_dots[i+1].x ||
+                    x[1] < s2->base_dots[j].x || x[1] > s2->base_dots[j+1].x)
                     break;
                 
                 x_prev[0] = x[0];
                 x_prev[1] = x[1];
             }
 
-            if (x[0] >= s1.base_dots[i].x && x[0] <= s1.base_dots[i+1].x &&
-                x[1] >= s2.base_dots[j].x && x[1] <= s2.base_dots[j+1].x)
+            if (x[0] >= s1->base_dots[i].x && x[0] <= s1->base_dots[i+1].x &&
+                x[1] >= s2->base_dots[j].x && x[1] <= s2->base_dots[j+1].x)
             {
                 // f(x1, x2) = (x1 - x2)^2 + (f1(x1) - f2(x2))^2
-                double res = pow(x[0] - x[1], 2) + pow(calculate_point(&s1.coefs[i*4], x[0], s1.base_dots[i].x) - calculate_point(&s2.coefs[j*4], x[1], s1.base_dots[j].x), 2);
+                double res = pow(x[0] - x[1], 2) + pow(calculate_point(&s1->coefs[i*4], x[0], s1->base_dots[i].x) - calculate_point(&s2->coefs[j*4], x[1], s1->base_dots[j].x), 2);
                 if (flag)
                 {
                     flag = 0;

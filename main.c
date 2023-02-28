@@ -39,7 +39,7 @@ int main()
         // print_graph(&splines[i], i, 0.1);
     }
 
-    // get crossing points
+    // get crossing points or min distance
     for (int i = 0; i < splines_count-1; i++)
     {
         for (int j = i+1; j < splines_count; j++)
@@ -48,12 +48,12 @@ int main()
 
             // максимум корней: кол-во уравнений 1 * кол-во уравнений 2 * 3
             Coords *x = (Coords *)malloc((splines[i].dots_count-1)*(splines[j].dots_count-1)*3*sizeof(Coords)); 
-            int cross_count = get_intersection_points(x, splines[i], splines[j]);
+            int cross_count = get_intersection_points(x, &splines[i], &splines[j]);
             if (cross_count == 0)
             {
                 printf("Splines do not intersect or equal\n");
                 // Get min distance
-                double dist = get_min_distance(splines[i], splines[j]);
+                double dist = get_min_distance(&splines[i], &splines[j]);
                 if (dist != -1)
                     printf("Min distance between splines is %lf\n", dist);
                 else
