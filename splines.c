@@ -267,7 +267,7 @@ double get_min_distance(Spline *s1, Spline *s2)
     double grad[2];
     double x_prev[2], x[2];
     double lambda = 0.1;
-    const double eps = 0.1;
+    const double eps = 0.00001;
     double minimum;
     short flag = 1;
 
@@ -289,7 +289,7 @@ double get_min_distance(Spline *s1, Spline *s2)
                     break;
 
                 if (x[0] < s1->base_dots[i].x || x[0] > s1->base_dots[i+1].x ||
-                    x[1] < s2->base_dots[j].x || x[1] > s2->base_dots[j+1].x)
+                    x[1] < s2->base_dots[j].x || x[1] > s2->base_dots[j+1].x) // Проверка расходимости
                     break;
                 
                 x_prev[0] = x[0];
@@ -297,10 +297,10 @@ double get_min_distance(Spline *s1, Spline *s2)
             }
 
             if (x[0] >= s1->base_dots[i].x && x[0] <= s1->base_dots[i+1].x &&
-                x[1] >= s2->base_dots[j].x && x[1] <= s2->base_dots[j+1].x)
+                x[1] >= s2->base_dots[j].x && x[1] <= s2->base_dots[j+1].x) // Если не разошлось, то все норм
             {
                 // f(x1, x2) = (x1 - x2)^2 + (f1(x1) - f2(x2))^2
-                double res = pow(x[0] - x[1], 2) + pow(calculate_point(&s1->coefs[i*4], x[0], s1->base_dots[i].x) - calculate_point(&s2->coefs[j*4], x[1], s1->base_dots[j].x), 2);
+                double res = pow(x[0] - x[1], 2) + pow(calculate_point(&s1->coefs[i*4], x[0], s1->base_dots[i].x) - calculate_point(&s2->coefs[j*4], x[1], s2->base_dots[j].x), 2);
                 if (flag)
                 {
                     flag = 0;

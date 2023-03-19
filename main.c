@@ -1,6 +1,7 @@
 #include "splines.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 
 int main()
@@ -55,7 +56,9 @@ int main()
                 // Get min distance
                 double dist = get_min_distance(&splines[i], &splines[j]);
                 if (dist != -1)
-                    printf("Min distance between splines is %lf\n", dist);
+                {
+                    printf("Min distance between splines is %lf\n", sqrt(dist));
+                }
                 else
                     printf("Min distance can't be found :(\n");
             }
